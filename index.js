@@ -1,6 +1,8 @@
 const { response, request } = require('express')
 const express = require('express')
+const time = require('express-timestamp')
 const app = express()
+app.use(time.init)
 
 let notes = [
     {
@@ -25,6 +27,16 @@ let notes = [
 
   app.get('/api/persons', (request, response) => {
     response.json(notes)
+  })
+
+  app.get('/info', (request, response) => {
+    const entries = notes.length
+    
+    response.send(`<div>
+    <p>Phonebook has info for ${entries} people.</p>
+    <p>${request.timestamp}</p>
+    </div>`)
+    
   })
 
   const PORT = 3001
