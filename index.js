@@ -3,6 +3,7 @@ const express = require('express')
 const time = require('express-timestamp')
 const app = express()
 app.use(time.init)
+app.use(express.json()) //use express json-parsar to access the data easily
 
 let persons = [
   { 
@@ -49,12 +50,32 @@ let persons = [
     }
     response.json(person)
   })
-  
 
   app.delete('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
     persons = persons.filter(entry => entry.id !== id)
     response.status(204)
+  })
+
+  app.post('/api/persons', (request,response) => {
+    const id = Math.floor(Math.random()*10000)
+
+    const body = request.body
+
+    if(!body) {
+      return response.status(400).json({
+        error: 'content missing'
+      })
+    }
+
+    const person = {
+      "id": id,
+      "name": body.name,
+      "number": body.number
+    }
+    persons.concat(person)
+
+    response.json(person);
   })
 
   const PORT = 3001
