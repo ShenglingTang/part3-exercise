@@ -1,9 +1,11 @@
 const { response, request } = require('express')
 const express = require('express')
 const time = require('express-timestamp')
+const morgan = require('morgan')
 const app = express()
 app.use(time.init)
 app.use(express.json()) //use express json-parsar to access the data easily
+// app.use(morgan)
 
 let persons = [
   { 
@@ -81,7 +83,7 @@ let persons = [
     }
     persons.concat(person)
 
-    response.json(person);
+    response.json(person)
   })
 
   const PORT = 3001
