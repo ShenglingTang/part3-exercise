@@ -1,11 +1,14 @@
 const { response, request } = require('express')
 const express = require('express')
 const time = require('express-timestamp')
-const morgan = require('morgan')
+// const morgan = require('morgan')
 const app = express()
+const cors = require('cors')
 app.use(time.init)
 app.use(express.json()) //use express json-parsar to access the data easily
 // app.use(morgan)
+app.use(cors())
+app.use(express.static('build'))
 
 let persons = [
   { 
@@ -86,7 +89,7 @@ let persons = [
     response.json(person)
   })
 
-  const PORT = 3001
+  const PORT = process.env.PORT || 3001
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
   })
