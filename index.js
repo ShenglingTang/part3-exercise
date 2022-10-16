@@ -1,14 +1,20 @@
+require('dotenv').config()
 const { response, request } = require('express')
 const express = require('express')
 const time = require('express-timestamp')
 // const morgan = require('morgan')
 const app = express()
 const cors = require('cors')
+// const url = `mongodb+srv://ShenglingTang:Jonttg12@cluster0.pmgviih.mongodb.net/?retryWrites=true&w=majority`
+const Phonebook = require('./models/phonebook')
+const url = process.env.MONGODB_URL
+
 app.use(time.init)
 app.use(express.json()) //use express json-parsar to access the data easily
 // app.use(morgan)
 app.use(cors())
 app.use(express.static('build'))
+
 
 let persons = [
   { 
@@ -34,32 +40,46 @@ let persons = [
 ]
 
   app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Phonebook.find({}).then(items => {
+      response.json(items)
+    })
   })
 
   app.get('/info', (request, response) => {
-    const entries = persons.length
-
-    response.send(`<div>
-    <p>Phonebook has info for ${entries} people.</p>
-    <p>${request.timestamp}</p>
-    </div>`)
-    
+    Phonebook.find({}).then(items => {
+      console.log(items.length);
+      const entries = items.length
+      response.send(`<div>
+      <p>Phonebook has info for ${entries} people.</p>
+      <p>${request.timestamp}</p>
+      </div>`)
+    })
   })
 
   app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(note => note.id === id)
-    if (!person) {
-      response.status(404).end()
-    }
-    response.json(person)
+    Phonebook.findById(request.params.id)
+    .then(phonebookItem => {
+      if(phonebookItem) {
+        response.json(phonebookItem)
+      } else {
+        response.status(404).end()
+      }
+  })
+  .catch(error => {
+    console.log(error);
+    response.status(500).end()
+  })
   })
 
   app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(entry => entry.id !== id)
-    response.status(204)
+    Phonebook.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => {
+      console.log(error)
+      response.status(500).end()
+    })
   })
 
   app.post('/api/persons', (request,response) => {
@@ -73,20 +93,40 @@ let persons = [
       })
     }
 
-    if(persons.find(person => person.name === body.name)) {
-      return response.status(409).json({
-        error: 'name must be unique'
-      })
+    // if(persons.find(person => person.name === body.name)) {
+    //   return response.status(409).json({
+    //     error: 'name must be unique'
+    //   })
+    // }
+
+    const phonebookItem = new Phonebook(
+      {
+        "id": id,
+        "name": body.name,
+        "number": body.number
+      }
+    )
+
+    phonebookItem.save().then(savedPhonebookItem => {
+      response.json(savedPhonebookItem)
+    })
+  })
+
+  app.put('/api/persons/:id', (request, response) => {
+    const phonebookItem = {
+      name: request.body.name,
+      number: request.body.number
     }
 
-    const person = {
-      "id": id,
-      "name": body.name,
-      "number": body.number
+    Phonebook.findByIdAndUpdate(request.params.id, phonebookItem,{new: true})
+    .then(updatedPhonebookItem => {
+      response.json(updatedPhonebookItem)
+    })
+    .catch( error => {
+      console.log(error)
+      response.status(500).end()
     }
-    persons.concat(person)
-
-    response.json(person)
+    )
   })
 
   const PORT = process.env.PORT || 3001
