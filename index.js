@@ -87,15 +87,9 @@ let persons = [
 
     const body = request.body
 
-    if(!body.name || !body.number) {
-      return response.status(400).json({
-        error: 'content missing'
-      })
-    }
-
-    // if(persons.find(person => person.name === body.name)) {
-    //   return response.status(409).json({
-    //     error: 'name must be unique'
+    // if(!body.name || !body.number) {
+    //   return response.status(400).json({
+    //     error: 'content missing'
     //   })
     // }
 
@@ -110,6 +104,9 @@ let persons = [
     phonebookItem.save().then(savedPhonebookItem => {
       response.json(savedPhonebookItem)
     })
+    .catch(error => {
+      response.status(400).json({error: error.message})
+    })
   })
 
   app.put('/api/persons/:id', (request, response) => {
@@ -118,7 +115,7 @@ let persons = [
       number: request.body.number
     }
 
-    Phonebook.findByIdAndUpdate(request.params.id, phonebookItem,{new: true})
+    Phonebook.findByIdAndUpdate(request.params.id, phonebookItem,{new: true, runValidators: true, context: 'query'})
     .then(updatedPhonebookItem => {
       response.json(updatedPhonebookItem)
     })
